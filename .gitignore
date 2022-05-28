@@ -1,0 +1,16 @@
+.vscode/
+*.tar.*
+*.un~
+.deps/
+*.log
+*.o
+config.status
+ocelot
+Makefile
+.idea/
+cmake-build-debug/
+autom4te.cache/
+
+version.cpp
+ocelot.conf
+test/

@@ -1,0 +1,6 @@
+//
+// Created by feng on 4/22/21.
+//
+#include "version.h"
+char const * const version = "v1.0-COMMIT";
+

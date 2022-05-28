@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+  ocelot:
+    image: gpw-ocelot
+    container_name: gpw-ocelot
+    ports:
+      - 34000:34000
+    environment:
+      - ENV=development
+      # These should match what you set for your mysql container below
+      - MYSQL_USER=gazelle
+      - MYSQL_PASSWORD=password
