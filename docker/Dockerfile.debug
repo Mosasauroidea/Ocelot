@@ -1,6 +1,6 @@
 FROM debian:stretch-slim
 
-COPY .. /srv
+COPY . /srv
 WORKDIR /srv
 
 RUN apt-get update \

@@ -1,6 +1,6 @@
 FROM debian:stretch-slim
 
-COPY .. /srv
+COPY . /srv
 COPY ocelot.conf /srv/ocelot.conf
 WORKDIR /srv
 

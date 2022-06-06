@@ -71,7 +71,7 @@ If the service is to run in production, [systemd](https://wiki.ubuntu.com/system
 
   Run these commands from the root directory of this repository.
 ```shell
-docker build . --no-cache -t gpw-ocelot:latest -f Dockerfile
+docker build --no-cache -t gpw-ocelot:latest -f docker/Dockerfile .
 ```
   If this is to deploy in production, remove `CXXFLAGS=-D__DEBUG_BUILD__` which is for testing purpose,
 such as allowing peer connections from local networks

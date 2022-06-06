@@ -1,9 +1,9 @@
 # Docker Deployment for GPW Tracker Ocelot
 
 ## Prepare Docker Image
-Run the command from this directory, i.e. `./docker`.
+Run the command from the root directory of this repository.
 ```shell
-docker build --no-cache -t gpw-ocelot:latest -f Dockerfile.debug
+docker build --no-cache -t gpw-ocelot:latest -f docker/Dockerfile.debug .
 ```
 
 Here are three docker configurations for build:
