@@ -23,7 +23,7 @@ Here are three docker configurations for build:
 2. The container can be started using the previously built image `gpw-ocelot:latest`. We use `gazelle` as parent here 
    so that the containers under the same parent `gazelle` can communicate with each other under the same network.
 ```shell
-docker compose -p gazelle up -d
+docker-compose -p gazelle up -d
 ```
 
 ## Testing Ocelot
