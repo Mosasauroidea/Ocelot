@@ -1,6 +1,7 @@
 FROM debian:stretch-slim
 
-COPY .. /srv
+COPY . /srv
+COPY ocelot.conf /srv/ocelot.conf
 WORKDIR /srv
 
 RUN apt-get update \
@@ -18,7 +19,7 @@ RUN apt-get update \
         mariadb-client \
         pkg-config \
         git 
-RUN ./configure CXXFLAGS=-D__DEBUG_BUILD__ --with-mysql-lib=/usr/lib/x86_64-linux-gnu/ \
+RUN ./configure --with-mysql-lib=/usr/lib/x86_64-linux-gnu/ \
         --with-ev-lib=/usr/lib/x86_64-linux-gnu/ \
         --with-boost-libdir=/usr/lib/x86_64-linux-gnu/ 
 RUN make \

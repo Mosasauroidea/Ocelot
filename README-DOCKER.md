@@ -1,9 +1,9 @@
 # Docker Deployment for GPW Tracker Ocelot
 
 ## Prepare Docker Image
-Run the command from this directory, i.e. `./docker`.
+Run the command from the root directory of this repository.
 ```shell
-docker build --no-cache -t gpw-ocelot:latest -f Dockerfile.debug
+docker build --no-cache -t gpw-ocelot:latest -f Dockerfile.debug .
 ```
 
 Here are three docker configurations for build:
@@ -23,7 +23,7 @@ Here are three docker configurations for build:
 2. The container can be started using the previously built image `gpw-ocelot:latest`. We use `gazelle` as parent here 
    so that the containers under the same parent `gazelle` can communicate with each other under the same network.
 ```shell
-docker-compose up -p gazelle -d
+docker-compose -p gazelle up -d
 ```
 
 ## Testing Ocelot

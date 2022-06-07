@@ -71,7 +71,7 @@ If the service is to run in production, [systemd](https://wiki.ubuntu.com/system
 
   Run these commands from the root directory of this repository.
 ```shell
-docker build . --no-cache -t gpw-ocelot:latest -f Dockerfile
+docker build --no-cache -t gpw-ocelot:latest -f Dockerfile .
 ```
   If this is to deploy in production, remove `CXXFLAGS=-D__DEBUG_BUILD__` which is for testing purpose,
 such as allowing peer connections from local networks
@@ -82,7 +82,7 @@ such as allowing peer connections from local networks
   - The container can be started using the previously built image `gpw-ocelot:latest`. We use `gazelle` as parent here
      so that the containers under the same parent `gazelle` can communicate with each other under the same network. 
 ```shell    
-docker-compose -p ocelot up -d
+docker-compose -p gazelle up -d
 ```
 
 ## Testing Ocelot
