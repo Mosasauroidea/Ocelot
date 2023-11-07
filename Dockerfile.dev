@@ -1,5 +1,5 @@
 FROM debian:stretch-slim
-
+RUN sed -i s/deb.debian.org/archive.debian.org/g /etc/apt/sources.list
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
         build-essential \
