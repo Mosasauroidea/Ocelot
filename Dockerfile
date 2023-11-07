@@ -1,5 +1,7 @@
-FROM debian:stretch-slim
-
+FROM debian:stretch
+RUN rm /etc/apt/sources.list
+RUN echo "deb http://archive.debian.org/debian-security stretch/updates main" >> /etc/apt/sources.list.d/stretch.list
+RUN echo "deb http://archive.debian.org/debian stretch main" >> /etc/apt/sources.list.d/stretch.list
 COPY . /srv
 COPY ocelot.conf /srv/ocelot.conf
 WORKDIR /srv
