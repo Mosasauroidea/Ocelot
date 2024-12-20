@@ -1,4 +1,5 @@
 #include <cerrno>
+#include <glog/logging.h>
 #include "ocelot.h"
 #include "config.h"
 #include "db.h"
@@ -51,7 +52,7 @@ void connection_mother::reload_config(config * conf) {
 	std::vector<int> old_listen_sockets = listen_sockets;
 	load_config(conf);
 	if (old_listen_port != listen_port) {
-		std::cout << "Changing listen port from " << old_listen_port << " to " << listen_port << std::endl;
+		LOG(INFO) << "Changing listen port from " << old_listen_port << " to " << listen_port;
 
 		if (create_listen_socket(conf) == RESULT_OK) {
 			for (auto const &it: listen_events) {
@@ -74,7 +75,7 @@ void connection_mother::reload_config(config * conf) {
 				listen_events.insert(std::pair<int, ev::io*>(listen_socket, listen_event));
 			}
 		} else {
-			std::cout << "Couldn't create new listen socket when reloading config" << std::endl;
+			LOG(INFO) << "Couldn't create new listen socket when reloading config";
 		}
 	}
 
@@ -83,7 +84,7 @@ void connection_mother::reload_config(config * conf) {
 		const char* delim = " ";
 		std::copy(old_listen_hosts.begin(), old_listen_hosts.end(), std::ostream_iterator<std::string>(old_imploded, delim));
 		std::copy(listen_hosts.begin(), listen_hosts.end(), std::ostream_iterator<std::string>(new_imploded, delim));
-		std::cout << "Changing listen host from \"" << trim(old_imploded.str()) << "\" to \"" << trim(new_imploded.str()) << "\"" << std::endl;
+		LOG(INFO) << "Changing listen host from \"" << trim(old_imploded.str()) << "\" to \"" << trim(new_imploded.str()) << "\"";
 
 		for (auto const &it: listen_events) {
 			ev::io* listen_event = it.second;
@@ -105,7 +106,7 @@ void connection_mother::reload_config(config * conf) {
 				listen_events.insert(std::pair<int, ev::io*>(listen_socket, listen_event));
 			}
 		} else {
-			std::cout << "Couldn't create new listen socket when reloading config" << std::endl;
+			LOG(INFO) << "Couldn't create new listen socket when reloading config";
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -121,11 +122,11 @@ int connection_mother::socket_set_non_block(int fd) {
 	// Set non-blocking
 	int flags = fcntl(fd, F_GETFL);
 	if (flags == -1) {
-		std::cout << "Could not get socket flags: " << strerror(errno) << std::endl;
+		LOG(INFO) << "Could not get socket flags: " << strerror(errno);
 		return RESULT_ERR;
 	}
 	if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1) {
-		std::cout << "Could not set non-blocking: " << strerror(errno) << std::endl;
+		LOG(INFO) << "Could not set non-blocking: " << strerror(errno);
 		return RESULT_ERR;
 	}
 
@@ -137,7 +138,7 @@ int connection_mother::socket_set_reuse_addr(int fd) {
 
 	// Stop old sockets from hogging the port
 	if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
-		std::cout << "Could not reuse socket: " << strerror(errno) << std::endl;
+		LOG(INFO) << "Could not reuse socket: " << strerror(errno);
 		return RESULT_ERR;
 	}
 
@@ -158,13 +159,13 @@ int connection_mother::socket_listen(int s, struct sockaddr *address, socklen_t 
 		} else {
 			type = "Unknown Domain Socket";
 		}
-		std::cout << "Bind failed on " << type << ": " << strerror(errno) << " (" << errno << ")" << std::endl;
+		LOG(INFO) << "Bind failed on " << type << ": " << strerror(errno) << " (" << errno << ")";
 		return RESULT_ERR;
 	}
 
 	// Listen
 	if (listen(s, backlog) == -1) {
-		std::cout << "Listen failed: " << strerror(errno) << std::endl;
+		LOG(INFO) << "Listen failed: " << strerror(errno);
 		return RESULT_ERR;
 	}
 
@@ -186,7 +187,7 @@ int connection_mother::create_tcp_server(unsigned int port, const std::string &i
 
 		// Check for socket
 		if (new_listen_socket == -1) {
-			std::cout << "Failed to open socket." << std::endl;
+			LOG(INFO) << "Failed to open socket.";
 			return RESULT_ERR;
 		}
 
@@ -196,24 +197,24 @@ int connection_mother::create_tcp_server(unsigned int port, const std::string &i
 		if (p->ai_family == PF_INET) {
 			struct sockaddr_in *s = (struct sockaddr_in *)p->ai_addr;
 			inet_ntop(AF_INET, (void*)&(s->sin_addr), ip_value, sizeof(ip_value));
-			std::cout << "Listening with IPv4 INET socket on " << ip_value << ":" << port << "." << std::endl;
+			LOG(INFO) << "Listening with IPv4 INET socket on " << ip_value << ":" << port << ".";
 
 			// IPv6 address was found
 		} else if (p->ai_family == PF_INET6) {
 			struct sockaddr_in6 *s6 = (struct sockaddr_in6 *)p->ai_addr;
 			inet_ntop(AF_INET6, (void*)&(s6->sin6_addr), ip_value, sizeof(ip_value));
-			std::cout << "Listening with IPv6 INET socket on [" << ip_value << "]:" << port << "." << std::endl;
+			LOG(INFO) << "Listening with IPv6 INET socket on [" << ip_value << "]:" << port << ".";
 
 #if defined IPV6_V6ONLY
 			int yes = 1;
 			// Attempt to disable Dual Stack
 			if (setsockopt(new_listen_socket, IPPROTO_IPV6, IPV6_V6ONLY, &yes, sizeof(yes)) == -1) {
-				std::cout << "Failed to disable IPv6 Dual Stack mode: " << strerror(errno) << std::endl;
+				LOG(INFO) << "Failed to disable IPv6 Dual Stack mode: " << strerror(errno);
 				return RESULT_ERR;
 			}
 #endif
 		} else {
-			std::cout << "Unknown address family." << std::endl;
+			LOG(INFO) << "Unknown address family.";
 			return RESULT_ERR;
 		}
 
@@ -248,7 +249,7 @@ int connection_mother::create_unix_server(const std::string &path) {
 
 	// Check for socket
 	if (new_listen_socket == -1) {
-		std::cout << "Failed to open UNIX socket: " << strerror(errno) << std::endl;
+		LOG(INFO) << "Failed to open UNIX socket: " << strerror(errno);
 		return RESULT_ERR;
 	}
 
@@ -265,7 +266,7 @@ int connection_mother::create_unix_server(const std::string &path) {
 	// Prepare a Unix socket
 	unix_address.sun_family = AF_UNIX;
 	strncpy(unix_address.sun_path, path.c_str(), sizeof(unix_address.sun_path)-1);
-	std::cout << "Listening with UNIX socket." << std::endl;
+	LOG(INFO) << "Listening with UNIX socket.";
 
 	if (socket_listen(new_listen_socket, (struct sockaddr*)&unix_address, sizeof(unix_address), max_connections) == RESULT_ERR) {
 		return RESULT_ERR;
@@ -274,7 +275,7 @@ int connection_mother::create_unix_server(const std::string &path) {
 	mode = (S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH);
 
 	if (chmod(path.c_str(), mode) == -1) {
-		std::cout << "chmod() \"" << path << "\" failed" << std::endl;
+		LOG(INFO) << "chmod() \"" << path << "\" failed";
 		return RESULT_ERR;
 	}
 
@@ -310,7 +311,7 @@ int connection_mother::create_listen_socket(config * conf) {
 	}
 
 	if (listen_sockets.empty()) {
-		std::cout << "Configured to not listen anywhere." << std::endl;
+		LOG(INFO) << "Configured to not listen anywhere.";
 		return RESULT_ERR;
 	}
 
@@ -318,7 +319,7 @@ int connection_mother::create_listen_socket(config * conf) {
 }
 
 void connection_mother::run() {
-	std::cout << "Sockets up on port " << listen_port << ", starting event loop!" << std::endl;
+	LOG(INFO) << "Sockets up on port " << listen_port << ", starting event loop!";
 	ev_loop(ev_default_loop(0), 0);
 }
 
@@ -357,7 +358,7 @@ connection_middleman::connection_middleman(int &listen_socket, worker * new_work
 {
 	connect_sock = accept(listen_socket, NULL, NULL);
 	if (connect_sock == -1) {
-		std::cout << "Accept failed, errno " << errno << ": " << strerror(errno) << std::endl;
+		LOG(INFO) << "Accept failed, errno " << errno << ": " << strerror(errno);
 		delete this;
 		return;
 	}
@@ -365,10 +366,10 @@ connection_middleman::connection_middleman(int &listen_socket, worker * new_work
 	// Set non-blocking
 	int flags = fcntl(connect_sock, F_GETFL);
 	if (flags == -1) {
-		std::cout << "Could not get connect socket flags" << std::endl;
+		LOG(INFO) << "Could not get connect socket flags";
 	}
 	if (fcntl(connect_sock, F_SETFL, flags | O_NONBLOCK) == -1) {
-		std::cout << "Could not set non-blocking" << std::endl;
+		LOG(INFO) << "Could not set non-blocking";
 	}
 
 	// Get their info

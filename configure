@@ -622,6 +622,8 @@ ac_subst_vars='am__EXEEXT_FALSE
 am__EXEEXT_TRUE
 LTLIBOBJS
 LIBOBJS
+GLOG_INC_DIR
+GLOG_LIB_DIR
 MYSQLPP_INC_DIR
 MYSQLPP_LIB_DIR
 MYSQL_C_LIB_NAME
@@ -756,6 +758,9 @@ with_mysqlpp
 with_mysqlpp_lib
 with_mysqlpp_include
 with_tcmalloc
+with_glog
+with_glog_lib
+with_glog_include
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1440,6 +1445,11 @@ Optional Packages:
   --with-mysqlpp-include=<path>
                           directory path of MySQL++ headers
   --with-tcmalloc         use tcmalloc if it's available [default=yes]
+  --with-glog=<path>      path containing libgoogle-glog-dev header and
+                          library subdirs
+  --with-glog-lib=<path>  directory path of libglog library
+  --with-glog-include=<path>
+                          directory path of libev headers
 
 Some influential environment variables:
   CXX         C++ compiler command
@@ -6620,6 +6630,159 @@ fi
 
 
 fi
+
+
+
+# Check whether --with-glog was given.
+if test "${with_glog+set}" = set; then :
+  withval=$with_glog; GLOG_lib_check="$with_glog/lib64 $with_glog/lib $with_glog/lib64/libglog $with_glog/lib/libglog"
+		  GLOG_inc_check="$with_glog/include $with_glog/include/libglog"
+else
+  GLOG_lib_check="/usr/local/libglog/lib64 /usr/local/libglog/lib /usr/local/lib64/libglog /usr/local/lib/libglog /opt/libglog/lib64 /opt/libglog/lib /usr/lib64/libglog /usr/lib/libglog /usr/local/lib64 /usr/local/lib /usr/lib64 /usr/lib"
+		  GLOG_inc_check="/usr/local/libglog/include /usr/local/include/libglog /opt/libglog/include /usr/local/include/libglog /usr/local/include /usr/include/libglog /usr/include"
+fi
+
+
+# Check whether --with-glog-lib was given.
+if test "${with_glog_lib+set}" = set; then :
+  withval=$with_glog_lib; GLOG_lib_check="$with_glog_lib $with_glog_lib/lib64 $with_glog_lib/lib $with_glog_lib/lib64/glog $with_glog_lib/lib/glog"
+fi
+
+
+# Check whether --with-glog-include was given.
+if test "${with_glog_include+set}" = set; then :
+  withval=$with_glog_include; GLOG_inc_check="$with_glog_include $with_glog_include/include $with_glog_include/include/glog"
+fi
+
+
+				{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for libglog library location" >&5
+$as_echo_n "checking for libglog library location... " >&6; }
+if ${ac_cv_glog_lib+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+		for dir in $GLOG_lib_check
+		do
+			if test -d "$dir" && \
+				( test -f "$dir/libglog.so" ||
+				  test -f "$dir/libglog.a" )
+			then
+				ac_cv_glog_lib=$dir
+				break
+			fi
+		done
+
+		if test -z "$ac_cv_glog_lib"
+		then
+			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+			as_fn_error $? "Didn't find the libglog library dir in '$GLOG_lib_check'" "$LINENO" 5
+		fi
+
+		case "$ac_cv_glog_lib" in
+			/* )
+				;;
+			* )
+				{ $as_echo "$as_me:${as_lineno-$LINENO}: result: " >&5
+$as_echo "" >&6; }
+				as_fn_error $? "The libglog library directory ($ac_cv_glog_lib) must be an absolute path." "$LINENO" 5
+				;;
+		esac
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_glog_lib" >&5
+$as_echo "$ac_cv_glog_lib" >&6; }
+	GLOG_LIB_DIR=$ac_cv_glog_lib
+
+
+				{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for libglog include path" >&5
+$as_echo_n "checking for libglog include path... " >&6; }
+if ${ac_cv_glog_inc+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+		for dir in $GLOG_inc_check
+		do
+			if test -d "$dir" && test -f "$dir/ev++.h"
+			then
+				ac_cv_glog_inc=$dir
+				break
+			fi
+		done
+
+		if test -z "$ac_cv_glog_inc"
+		then
+			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+			as_fn_error $? "Didn't find the libglog header dir in '$GLOG_inc_check'" "$LINENO" 5
+		fi
+
+		case "$ac_cv_glog_inc" in
+			/* )
+				;;
+			* )
+				{ $as_echo "$as_me:${as_lineno-$LINENO}: result: " >&5
+$as_echo "" >&6; }
+				as_fn_error $? "The libglog header directory ($ac_cv_glog_inc) must be an absolute path." "$LINENO" 5
+				;;
+		esac
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_glog_inc" >&5
+$as_echo "$ac_cv_glog_inc" >&6; }
+	GLOG_INC_DIR=$ac_cv_glog_inc
+
+
+					case "$ac_cv_glog_lib" in
+		/usr/lib)
+			;;
+		*)
+			LDFLAGS="$LDFLAGS -L${ac_cv_glog_lib}"
+			;;
+	esac
+	CPPFLAGS="$CPPFLAGS -I${ac_cv_glog_inc}"
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking that we can build libglog programs" >&5
+$as_echo_n "checking that we can build libglog programs... " >&6; }
+
+	LIBS="-lglog $LIBS"
+	ac_ext=cpp
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
+
+	cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+#include <glog/logging.h>
+int
+main ()
+{
+LOG(INFO) << "Hello world!"
+  ;
+  return 0;
+}
+
+_ACEOF
+if ac_fn_cxx_try_link "$LINENO"; then :
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+			{ { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+$as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
+as_fn_error $? "Cannot build libglog programs
+See \`config.log' for more details" "$LINENO" 5; }
+
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+	ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
 
 
 

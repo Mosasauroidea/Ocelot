@@ -1,4 +1,5 @@
 #include <iostream>
+#include <glog/logging.h>
 
 #include "ocelot.h"
 #include "config.h"
@@ -28,14 +29,13 @@ void schedule::handle(ev::timer &watcher, int events_flags) {
 	unsigned int cur_schedule_interval = watcher.repeat;
 	stats.connection_rate = (stats.opened_connections - last_opened_connections) / cur_schedule_interval;
 	stats.request_rate = (stats.requests - last_request_count) / cur_schedule_interval;
-	if (counter % 20 == 0) {
-		std::cout << stats.open_connections << " open, "
-		<< stats.opened_connections << " connections (" << stats.connection_rate << "/s), "
-		<< stats.requests << " requests (" << stats.request_rate << "/s)" << std::endl;
-	}
+
+	LOG_IF(INFO, counter % 20 == 0) << stats.open_connections << " open, " <<
+		stats.opened_connections << " connections (" << stats.connection_rate << "/s), " <<
+		stats.requests << " requests (" << stats.request_rate << "/s)";
 
 	if (work->get_status() == CLOSING && db->all_clear() && sc->all_clear()) {
-		std::cout << "all clear, shutting down" << std::endl;
+		LOG(INFO) << "all clear, shutting down";
 		exit(0);
 	}
 

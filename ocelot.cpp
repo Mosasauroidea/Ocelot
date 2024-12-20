@@ -3,6 +3,8 @@
 #include <csignal>
 #include <thread>
 #include <execinfo.h>
+#include <glog/logging.h>
+#include <libgen.h>
 #include "ocelot.h"
 #include "config.h"
 #include "db.h"
@@ -23,7 +25,7 @@ struct stats_t stats;
 
 static void sig_handler(int sig) {
 	if (sig == SIGINT || sig == SIGTERM) {
-		std::cout << "Caught SIGINT/SIGTERM" << std::endl;
+		LOG(INFO) << "Caught SIGINT/SIGTERM";
 		if (work->shutdown()) {
 			exit(0);
 		}
@@ -31,23 +33,23 @@ static void sig_handler(int sig) {
         void *array[10];
         size_t size = backtrace(array, 10);
 
-        std::cerr << "Caught SIGSEGV/SIGABRT " << sig << std::endl;
+		LOG(ERROR) << "Caught SIGSEGV/SIGABRT " << sig;
         backtrace_symbols_fd(array, size, STDERR_FILENO);
         if (work->shutdown()) {
             exit(0);
         }
     } else if (sig == SIGHUP) {
-		std::cout << "Reloading config" << std::endl;
-		std::cout.flush();
+		LOG(INFO) << "Reloading config";
+		LOG(INFO).flush();
 		conf->reload();
 		db->reload_config(conf);
 		mother->reload_config(conf);
 		sc->reload_config(conf);
 		sched->reload_config(conf);
 		work->reload_config(conf);
-		std::cout << "Done reloading config" << std::endl;
+		LOG(INFO) << "Done reloading config";
 	} else if (sig == SIGUSR1) {
-		std::cout << "Reloading from database" << std::endl;
+		LOG(INFO) << "Reloading from database";
 		std::thread w_thread(&worker::reload_lists, work);
 		w_thread.detach();
 	}
@@ -57,10 +59,7 @@ int main(int argc, char **argv) {
 	// we don't use printf so make cout/cerr a little bit faster
 	std::ios_base::sync_with_stdio(false);
 
-	std::cout << "ocelot version: " << version << std::endl << std::endl;
-
 	conf = new config();
-
 	bool verbose = false, conf_arg = false;
 	std::string conf_file_path("./ocelot.conf");
 	for (int i = 1; i < argc; i++) {
@@ -85,12 +84,26 @@ int main(int argc, char **argv) {
 		conf->load(conf_file_path, conf_file);
 	}
 
+	// Initialize Google’s logging library
+#if defined(__DEBUG_BUILD__)
+	FLAGS_alsologtostderr = true;
+#endif
+	std::string log_dir = conf->get_str("log_dir");
+	FLAGS_log_dir = log_dir;
+	google::InitGoogleLogging(argv[0]);
+	google::FlushLogFiles(google::ERROR);
+
+	std::cout << "Ocelot has been started! Check logging files with prefix "<< basename(argv[0]) << " in "
+		<< log_dir << " for details." << std::endl;
+	LOG(INFO) << "Ocelot version: " << version << "\n";
+
 	db = new mysql(conf);
 
 	if (!db->connected()) {
-		std::cout << "Exiting" << std::endl;
+		LOG(INFO) << "Exiting...";
 		return 0;
 	}
+
 	db->verbose_flush = verbose;
 
 	sc = new site_comm(conf);
@@ -115,7 +128,7 @@ int main(int argc, char **argv) {
 	stats.scrapes = 0;
 	stats.bytes_read = 0;
 	stats.bytes_written = 0;
-	stats.start_time = time(NULL);
+	stats.start_time = time(nullptr);
 
 	// Create worker object, which handles announces and scrapes and all that jazz
 	work = new worker(conf, torrents_list, users_list, whitelist, db, sc);
@@ -133,13 +146,13 @@ int main(int argc, char **argv) {
 	sigemptyset(&handler.sa_mask);
 	handler.sa_flags = 0;
 
-	sigaction(SIGINT, &handler, NULL);
-	sigaction(SIGTERM, &handler, NULL);
-	sigaction(SIGSEGV, &handler, NULL);
-	sigaction(SIGABRT, &handler, NULL);
-	sigaction(SIGHUP, &handler, NULL);
-	sigaction(SIGUSR1, &handler, NULL);
-	sigaction(SIGUSR2, &ignore, NULL);
+	sigaction(SIGINT, &handler, nullptr);
+	sigaction(SIGTERM, &handler, nullptr);
+	sigaction(SIGSEGV, &handler, nullptr);
+	sigaction(SIGABRT, &handler, nullptr);
+	sigaction(SIGHUP, &handler, nullptr);
+	sigaction(SIGUSR1, &handler, nullptr);
+	sigaction(SIGUSR2, &ignore, nullptr);
 
 	mother->run();
 

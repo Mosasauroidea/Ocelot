@@ -97,7 +97,8 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/ax_boost_base.m4 \
 	$(top_srcdir)/m4/ax_check_compile_flag.m4 \
 	$(top_srcdir)/m4/ax_pthread.m4 $(top_srcdir)/m4/ev++.m4 \
 	$(top_srcdir)/m4/mysql++.m4 $(top_srcdir)/m4/mysql_loc.m4 \
-	$(top_srcdir)/m4/tcmalloc.m4 $(top_srcdir)/configure.ac
+	$(top_srcdir)/m4/tcmalloc.m4 $(top_srcdir)/m4/glog.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 DIST_COMMON = $(srcdir)/Makefile.am $(top_srcdir)/configure \

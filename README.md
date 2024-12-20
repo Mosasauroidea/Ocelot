@@ -40,22 +40,32 @@ The Gazelle installation guides include instructions for installing Ocelot as a 
 apt-get update
 
 apt-get install --no-install-recommends -y \
-build-essential \
-automake \
-cmake \
-default-libmysqlclient-dev \
-libboost-iostreams-dev \
-libboost-system-dev \
-libev-dev \
-libjemalloc-dev \
-libmysql++-dev \
-pkg-config
+        build-essential \
+        automake \
+        cmake \
+        default-libmysqlclient-dev \
+        libboost-iostreams-dev \
+        libboost-system-dev \
+        libev-dev \
+        libjemalloc-dev \
+        libmysql++-dev \
+        default-libmysqlclient-dev \
+        mariadb-client \
+        pkg-config \
+        git \
+        libgoogle-glog-dev
 
 ./configure --with-mysql-lib=/usr/lib/x86_64-linux-gnu/ \
 --with-ev-lib=/usr/lib/x86_64-linux-gnu/ \
 --with-boost-libdir=/usr/lib/x86_64-linux-gnu/
+--with-glog-lib=/usr/lib/x86_64-linux-gnu/
 
 make && make install
+```
+
+Ocelot can also be built from `CMakeLists.txt` by cmake with this command:
+```shell
+cmake . && cmake --build .
 ```
 
 * Run Ocelot:
@@ -71,14 +81,14 @@ If the service is to run in production, [systemd](https://wiki.ubuntu.com/system
 
   Run these commands from the root directory of this repository.
 ```shell
-docker build --no-cache -t gpw-ocelot:latest -f Dockerfile .
+docker build . --no-cache -t gpw-ocelot:latest -f Dockerfile
 ```
   If this is to deploy in production, remove `CXXFLAGS=-D__DEBUG_BUILD__` which is for testing purpose,
 such as allowing peer connections from local networks
 
 * Start the containers
 
-  - Deploy `Gazelle` firstly by following instructions [GazellePW Getting Started](https://github.com/Mosasauroidea/GazellePW/blob/main/docs/Getting-Started.md)
+  - Deploy `Gazelle` firstly by following instructions `Gazelle Setup-Development-Environment`
   - The container can be started using the previously built image `gpw-ocelot:latest`. We use `gazelle` as parent here
      so that the containers under the same parent `gazelle` can communicate with each other under the same network. 
 ```shell    
@@ -87,7 +97,7 @@ docker-compose -p gazelle up -d
 
 ## Testing Ocelot
 
-Note: The following instructions are assumed that `GazellePW`(`gpw-web`) and `Ocelot`(`gpw-ocelot`) have already been running in `container` mode.
+Note: The following instructions are assumed that `Gazelle`(`gpw-web`) and `Ocelot`(`gpw-ocelot`) have already been running in `container` mode.
 
 * Register as a user from start webpage `http://localhost:9000`
   

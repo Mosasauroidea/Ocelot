@@ -1,12 +1,10 @@
-#include <iostream>
 #include <istream>
 #include <ostream>
 #include <string>
-#include <sstream>
-#include <queue>
 #include <mutex>
 #include <boost/asio.hpp>
 #include <thread>
+#include <glog/logging.h>
 
 #include "config.h"
 #include "site_comm.h"
@@ -40,7 +38,7 @@ void site_comm::expire_token(int torrent, int user) {
 	}
 	expire_token_buffer += token_pair.str();
 	if (expire_token_buffer.length() > 350) {
-		std::cout << "Flushing overloaded token buffer" << std::endl;
+		LOG(INFO) << "Flushing overloaded token buffer";
 		if (!readonly) {
 			std::lock_guard<std::mutex> lock(expire_queue_lock);
 			token_queue.push(expire_token_buffer);
@@ -58,7 +56,7 @@ void site_comm::flush_tokens()
 	std::lock_guard<std::mutex> lock(expire_queue_lock);
 	size_t qsize = token_queue.size();
 	if (verbose_flush || qsize > 0) {
-		std::cout << "Token expire queue size: " << qsize << std::endl;
+		LOG(INFO) << "Token expire queue size: " << qsize;
 	}
 	if (expire_token_buffer == "") {
 		return;
@@ -115,7 +113,7 @@ void site_comm::do_flush_tokens()
 			std::getline(response_stream, status_message);
 
 			if (!response_stream || http_version.substr(0, 5) != "HTTP/") {
-				std::cout << "Invalid response" << std::endl;
+				LOG(INFO) << "Invalid response";
 				continue;
 			}
 
@@ -123,11 +121,11 @@ void site_comm::do_flush_tokens()
 				std::lock_guard<std::mutex> lock(expire_queue_lock);
 				token_queue.pop();
 			} else {
-				std::cout << "Response returned with status code " << status_code << " when trying to expire a token!" << std::endl;;
+				LOG(INFO) << "Response returned with status code " << status_code << " when trying to expire a token!";;
 			}
 		}
 	} catch (std::exception &e) {
-		std::cout << "Exception: " << e.what() << std::endl;
+		LOG(INFO) << "Exception: " << e.what();
 	}
 	t_active = false;
 }

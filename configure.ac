@@ -14,6 +14,7 @@ EV_DEVEL
 MYSQL_C_API_LOCATION
 MYSQLPP_DEVEL
 TCMALLOC
+GLOG_DEVEL
 
 AC_CONFIG_COMMANDS_PRE(COMMIT=`git rev-parse --short HEAD` && sed -e "s/COMMIT/${COMMIT}/g" version.cpp.template > version.cpp)
 

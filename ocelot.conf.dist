@@ -17,6 +17,7 @@ numwant_limit       = 50
 request_log_size    = 500
 
 mysql_host          = mysql
+mysql_port          = 3600
 mysql_username      = gazelle
 mysql_password      = password
 mysql_db            = gazelle
@@ -32,3 +33,4 @@ schedule_interval   = 3
 
 site_host           = web
 readonly            = false
+log_dir             = /var/log/

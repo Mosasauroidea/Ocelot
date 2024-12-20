@@ -1,11 +1,12 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <glog/logging.h>
 #include "config.h"
 #include "misc_functions.h"
 
 confval::confval() {
-	bool_val = 0;
+	bool_val = false;
 	uint_val = 0;
 	str_val = "";
 	val_type = CONF_NONEXISTENT;
@@ -78,6 +79,7 @@ void config::init() {
 	// MySQL
 	add("mysql_db", "gazelle");
 	add("mysql_host", "localhost");
+    add("mysql_port", 0u);
 	add("mysql_username", "");
 	add("mysql_password", "");
 
@@ -89,12 +91,15 @@ void config::init() {
 
 	// Debugging
 	add("readonly", false);
+
+	// Logging
+	add("log_dir", "/tmp/");
 }
 
 confval * config::get(const std::string &setting_name) {
 	const auto setting = settings.find(setting_name);
 	if (setting == settings.end()) {
-		std::cout << "WARNING: Unrecognized setting '" << setting_name << "'" << std::endl;
+		LOG(INFO) << "WARNING: Unrecognized setting '" << setting_name << "'";
 		return dummy_setting;
 	}
 	return &setting->second;
@@ -137,7 +142,7 @@ void config::reload() {
 	const std::string conf_file_path(get_str("conf_file_path"));
 	std::ifstream conf_file(conf_file_path);
 	if (conf_file.fail()) {
-		std::cout << "Config file '" << conf_file_path << "' couldn't be opened" << std::endl;
+		LOG(INFO) << "Config file '" << conf_file_path << "' couldn't be opened";
 	} else {
 		init();
 		load(conf_file);

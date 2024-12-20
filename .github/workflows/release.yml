@@ -1,0 +1,102 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "*"
+  pull_request:
+    branches:
+      - "*"
+  issues:
+    types: [pinned]
+
+jobs:
+  create_release:
+    name: Create release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - name: Create release
+        id: create_release
+        uses: actions/create-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+
+  build_release:
+    name: Build release
+    needs: create_release
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        include:
+          - os: ubuntu-latest
+            zip_name: ocelot_linux_amd64
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Install dependencies
+        run: |
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            sudo apt-get update -y -qq
+            sudo apt-get install --no-install-recommends -y \
+              build-essential \
+              cmake \
+              default-libmysqlclient-dev \
+              libboost-iostreams-dev \
+              libboost-system-dev \
+              libev-dev \
+              libjemalloc-dev \
+              libmysql++-dev \
+              pkg-config \
+              zip
+          else
+            echo "$RUNNER_OS not supported"
+            exit 1
+          fi
+        shell: bash
+      - name: Build project
+        run: |
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            ./configure --with-mysql-lib=/usr/lib/x86_64-linux-gnu/ \
+                --with-ev-lib=/usr/lib/x86_64-linux-gnu/ \
+                --with-boost-libdir=/usr/lib/x86_64-linux-gnu/
+            make
+            cp -v ocelot.conf.dist ocelot.conf
+
+            zip --junk-paths ${{ matrix.zip_name }}.zip build/ocelot ocelot.conf
+          else
+            echo "$RUNNER_OS not supported"
+            exit 1
+          fi
+        shell: bash
+      - name: Archive artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.zip_name }}
+          path: |
+            ocelot
+            ocelot.conf
+      - name: Upload release asset
+        uses: actions/upload-release-asset@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create_release.outputs.upload_url }}
+          asset_path: ${{ matrix.zip_name }}.zip
+          asset_name: ${{ matrix.zip_name }}.zip
+          asset_content_type: application/zip
+      - name: Build and push Docker images
+        uses: docker/build-push-action@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: soleil0/ocelot
+          tag_with_ref: true
